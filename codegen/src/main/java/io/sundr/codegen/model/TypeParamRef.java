@@ -16,6 +16,9 @@
 
 package io.sundr.codegen.model;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import java.util.Map;
 
 public class TypeParamRef extends TypeRef {
@@ -43,18 +46,30 @@ public class TypeParamRef extends TypeRef {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         TypeParamRef that = (TypeParamRef) o;
 
-        return name != null ? name.equals(that.name) : that.name == null;
-
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(dimensions, that.dimensions)
+            .append(name, that.name)
+            .isEquals();
     }
 
     @Override
     public int hashCode() {
-        return name != null ? name.hashCode() : 0;
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(name)
+            .append(dimensions)
+            .toHashCode();
     }
 
     @Override

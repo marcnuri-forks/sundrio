@@ -17,6 +17,8 @@
 package io.sundr.codegen.model;
 
 import io.sundr.codegen.utils.StringUtils;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +49,32 @@ public class WildcardRef extends TypeRef {
 
     public TypeRef withDimensions(int dimensions) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        WildcardRef that = (WildcardRef) o;
+
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(bounds, that.bounds)
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(bounds)
+            .toHashCode();
     }
 
     @Override

@@ -16,6 +16,9 @@
 
 package io.sundr.codegen.model;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import java.util.Map;
 
 public class PrimitiveRef extends TypeRef {
@@ -67,21 +70,30 @@ public class PrimitiveRef extends TypeRef {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         PrimitiveRef that = (PrimitiveRef) o;
 
-        if (dimensions != that.dimensions) return false;
-        return name != null ? name.equals(that.name) : that.name == null;
-
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(dimensions, that.dimensions)
+            .append(name, that.name)
+            .isEquals();
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + dimensions;
-        return result;
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(name)
+            .append(dimensions)
+            .toHashCode();
     }
 
     @Override

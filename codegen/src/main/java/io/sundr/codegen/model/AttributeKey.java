@@ -17,6 +17,9 @@
 package io.sundr.codegen.model;
 
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 public final class AttributeKey<T> {
 
     private final String name;
@@ -35,4 +38,29 @@ public final class AttributeKey<T> {
         return type;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        AttributeKey<?> that = (AttributeKey<?>) o;
+
+        return new EqualsBuilder()
+            .append(name, that.name)
+            .append(type, that.type)
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+            .append(name)
+            .append(type)
+            .toHashCode();
+    }
 }

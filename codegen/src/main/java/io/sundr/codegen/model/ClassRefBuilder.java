@@ -39,25 +39,25 @@ public class ClassRefBuilder extends ClassRefFluentImpl<ClassRefBuilder> impleme
             this(fluent, instance, true);
     }
     public ClassRefBuilder(ClassRefFluent<?> fluent,ClassRef instance,Boolean validationEnabled){
-            this.fluent = fluent; 
-            fluent.withDefinition(instance.getDefinition()); 
-            fluent.withFullyQualifiedName(instance.getFullyQualifiedName()); 
-            fluent.withDimensions(instance.getDimensions()); 
-            fluent.withArguments(instance.getArguments()); 
-            fluent.withAttributes(instance.getAttributes()); 
-            this.validationEnabled = validationEnabled; 
+            this.fluent = fluent;
+            fluent.withDefinition(instance.getDefinition());
+            fluent.withFullyQualifiedName(instance.getFullyQualifiedName());
+            fluent.withDimensions(instance.getDimensions());
+            fluent.withArguments(instance.getArguments());
+            fluent.withAttributes(instance.getAttributes());
+            this.validationEnabled = validationEnabled;
     }
     public ClassRefBuilder(ClassRef instance){
             this(instance,true);
     }
     public ClassRefBuilder(ClassRef instance,Boolean validationEnabled){
-            this.fluent = this; 
-            this.withDefinition(instance.getDefinition()); 
-            this.withFullyQualifiedName(instance.getFullyQualifiedName()); 
-            this.withDimensions(instance.getDimensions()); 
-            this.withArguments(instance.getArguments()); 
-            this.withAttributes(instance.getAttributes()); 
-            this.validationEnabled = validationEnabled; 
+            this.fluent = this;
+            this.withDefinition(instance.getDefinition());
+            this.withFullyQualifiedName(instance.getFullyQualifiedName());
+            this.withDimensions(instance.getDimensions());
+            this.withArguments(instance.getArguments());
+            this.withAttributes(instance.getAttributes());
+            this.validationEnabled = validationEnabled;
     }
 
     public EditableClassRef build(){

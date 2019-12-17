@@ -19,6 +19,8 @@ package io.sundr.codegen.model;
 import io.sundr.codegen.DefinitionRepository;
 import io.sundr.codegen.PackageScope;
 import io.sundr.codegen.utils.StringUtils;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -147,23 +149,34 @@ public class ClassRef extends TypeRef {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ClassRef classRef = (ClassRef) o;
 
-        if (dimensions != classRef.dimensions) return false;
-        if (definition != null ? !definition.equals(classRef.definition) : classRef.definition != null)
-            return false;
-        return arguments != null ? arguments.equals(classRef.arguments) : classRef.arguments == null;
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(dimensions, classRef.dimensions)
+            .append(definition, classRef.definition)
+            .append(fullyQualifiedName, classRef.fullyQualifiedName)
+            .append(arguments, classRef.arguments)
+            .isEquals();
     }
 
     @Override
     public int hashCode() {
-        int result = definition != null ? definition.hashCode() : 0;
-        result = 31 * result + dimensions;
-        result = 31 * result + (arguments != null ? arguments.hashCode() : 0);
-        return result;
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(definition)
+            .append(fullyQualifiedName)
+            .append(dimensions)
+            .append(arguments)
+            .toHashCode();
     }
 
     @Override

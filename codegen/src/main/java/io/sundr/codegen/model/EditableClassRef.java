@@ -32,7 +32,4 @@ public class EditableClassRef extends ClassRef implements Editable<ClassRefBuild
             return new ClassRefBuilder(this);
     }
 
-
-
-
 }

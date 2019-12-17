@@ -21,32 +21,32 @@ import io.sundr.builder.Predicate;
 import io.sundr.builder.VisitableBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSupportFluentImpl<A> implements PropertyFluent<A>{
 
-    private List<AnnotationRefBuilder> annotations =  new ArrayList<AnnotationRefBuilder>();
+    private final List<AnnotationRefBuilder> annotations =  new ArrayList<>();
     private VisitableBuilder<? extends TypeRef,?> typeRef;
     private String name;
 
     public PropertyFluentImpl(){
     }
     public PropertyFluentImpl(Property instance){
-            this.withAnnotations(instance.getAnnotations()); 
-            this.withTypeRef(instance.getTypeRef()); 
-            this.withName(instance.getName()); 
-            this.withModifiers(instance.getModifiers()); 
-            this.withAttributes(instance.getAttributes()); 
+            this.withAnnotations(instance.getAnnotations());
+            this.withTypeRef(instance.getTypeRef());
+            this.withName(instance.getName());
+            this.withModifiers(instance.getModifiers());
+            this.withAttributes(instance.getAttributes());
     }
 
     public A addToAnnotations(int index,AnnotationRef item){
-            if (this.annotations == null) {this.annotations = new ArrayList<AnnotationRefBuilder>();}
             AnnotationRefBuilder builder = new AnnotationRefBuilder(item);_visitables.get("annotations").add(index >= 0 ? index : _visitables.get("annotations").size(), builder);this.annotations.add(index >= 0 ? index : annotations.size(), builder); return (A)this;
     }
 
     public A setToAnnotations(int index,AnnotationRef item){
-            if (this.annotations == null) {this.annotations = new ArrayList<AnnotationRefBuilder>();}
             AnnotationRefBuilder builder = new AnnotationRefBuilder(item);
             if (index < 0 || index >= _visitables.get("annotations").size()) { _visitables.get("annotations").add(builder); } else { _visitables.get("annotations").set(index, builder);}
             if (index < 0 || index >= annotations.size()) { annotations.add(builder); } else { annotations.set(index, builder);}
@@ -54,12 +54,10 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
     }
 
     public A addToAnnotations(AnnotationRef... items){
-            if (this.annotations == null) {this.annotations = new ArrayList<AnnotationRefBuilder>();}
             for (AnnotationRef item : items) {AnnotationRefBuilder builder = new AnnotationRefBuilder(item);_visitables.get("annotations").add(builder);this.annotations.add(builder);} return (A)this;
     }
 
     public A addAllToAnnotations(Collection<AnnotationRef> items){
-            if (this.annotations == null) {this.annotations = new ArrayList<AnnotationRefBuilder>();}
             for (AnnotationRef item : items) {AnnotationRefBuilder builder = new AnnotationRefBuilder(item);_visitables.get("annotations").add(builder);this.annotations.add(builder);} return (A)this;
     }
 
@@ -71,7 +69,7 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
             for (AnnotationRef item : items) {AnnotationRefBuilder builder = new AnnotationRefBuilder(item);_visitables.get("annotations").remove(builder);if (this.annotations != null) {this.annotations.remove(builder);}} return (A)this;
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildAnnotations instead.
  * @return The buildable object.
@@ -104,18 +102,21 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
             for (AnnotationRefBuilder item: annotations) { if(predicate.apply(item)){return true;} } return false;
     }
 
-    public A withAnnotations(List<AnnotationRef> annotations){
-            if (this.annotations != null) { _visitables.get("annotations").removeAll(this.annotations);}
-            if (annotations != null) {this.annotations = new ArrayList<AnnotationRefBuilder>(); for (AnnotationRef item : annotations){this.addToAnnotations(item);}} else { this.annotations = new ArrayList<AnnotationRefBuilder>();} return (A) this;
+    public A withAnnotations(List<AnnotationRef> annotations) {
+        _visitables.get("annotations").removeAll(this.annotations);
+        this.annotations.clear();
+        if (annotations != null) {
+            annotations.forEach(this::addToAnnotations);
+        }
+        return (A) this;
     }
 
     public A withAnnotations(AnnotationRef... annotations){
-            if (this.annotations != null) {this.annotations.clear();}
-            if (annotations != null) {for (AnnotationRef item :annotations){ this.addToAnnotations(item);}} return (A) this;
+        return withAnnotations(Arrays.asList(Optional.ofNullable(annotations).orElse(new AnnotationRef[0])));
     }
 
     public Boolean hasAnnotations(){
-            return annotations != null && !annotations.isEmpty();
+            return !annotations.isEmpty();
     }
 
     public PropertyFluent.AnnotationsNested<A> addNewAnnotation(){
@@ -148,14 +149,14 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
 
     public PropertyFluent.AnnotationsNested<A> editMatchingAnnotation(Predicate<AnnotationRefBuilder> predicate){
             int index = -1;
-            for (int i=0;i<annotations.size();i++) { 
+            for (int i=0;i<annotations.size();i++) {
             if (predicate.apply(annotations.get(i))) {index = i; break;}
-            } 
+            }
             if (index < 0) throw new RuntimeException("Can't edit matching annotations. No match found.");
             return setNewAnnotationLike(index, buildAnnotation(index));
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildTypeRef instead.
  * @return The buildable object.
@@ -287,7 +288,7 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
 
             private final AnnotationRefBuilder builder;
         private final int index;
-    
+
             AnnotationsNestedImpl(int index,AnnotationRef item){
                     this.index = index;
                     this.builder = new AnnotationRefBuilder(this, item);
@@ -296,7 +297,7 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
                     this.index = -1;
                     this.builder = new AnnotationRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) PropertyFluentImpl.this.setToAnnotations(index, builder.build());
     }
@@ -308,14 +309,14 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
     public class PrimitiveRefTypeNestedImpl<N> extends PrimitiveRefFluentImpl<PropertyFluent.PrimitiveRefTypeNested<N>> implements PropertyFluent.PrimitiveRefTypeNested<N>,Nested<N>{
 
             private final PrimitiveRefBuilder builder;
-    
+
             PrimitiveRefTypeNestedImpl(PrimitiveRef item){
                     this.builder = new PrimitiveRefBuilder(this, item);
             }
             PrimitiveRefTypeNestedImpl(){
                     this.builder = new PrimitiveRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) PropertyFluentImpl.this.withPrimitiveRefType(builder.build());
     }
@@ -327,14 +328,14 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
     public class VoidRefTypeNestedImpl<N> extends VoidRefFluentImpl<PropertyFluent.VoidRefTypeNested<N>> implements PropertyFluent.VoidRefTypeNested<N>,Nested<N>{
 
             private final VoidRefBuilder builder;
-    
+
             VoidRefTypeNestedImpl(VoidRef item){
                     this.builder = new VoidRefBuilder(this, item);
             }
             VoidRefTypeNestedImpl(){
                     this.builder = new VoidRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) PropertyFluentImpl.this.withVoidRefType(builder.build());
     }
@@ -346,14 +347,14 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
     public class WildcardRefTypeNestedImpl<N> extends WildcardRefFluentImpl<PropertyFluent.WildcardRefTypeNested<N>> implements PropertyFluent.WildcardRefTypeNested<N>,Nested<N>{
 
             private final WildcardRefBuilder builder;
-    
+
             WildcardRefTypeNestedImpl(WildcardRef item){
                     this.builder = new WildcardRefBuilder(this, item);
             }
             WildcardRefTypeNestedImpl(){
                     this.builder = new WildcardRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) PropertyFluentImpl.this.withWildcardRefType(builder.build());
     }
@@ -365,14 +366,14 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
     public class ClassRefTypeNestedImpl<N> extends ClassRefFluentImpl<PropertyFluent.ClassRefTypeNested<N>> implements PropertyFluent.ClassRefTypeNested<N>,Nested<N>{
 
             private final ClassRefBuilder builder;
-    
+
             ClassRefTypeNestedImpl(ClassRef item){
                     this.builder = new ClassRefBuilder(this, item);
             }
             ClassRefTypeNestedImpl(){
                     this.builder = new ClassRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) PropertyFluentImpl.this.withClassRefType(builder.build());
     }
@@ -384,14 +385,14 @@ public class PropertyFluentImpl<A extends PropertyFluent<A>> extends ModifierSup
     public class TypeParamRefTypeNestedImpl<N> extends TypeParamRefFluentImpl<PropertyFluent.TypeParamRefTypeNested<N>> implements PropertyFluent.TypeParamRefTypeNested<N>,Nested<N>{
 
             private final TypeParamRefBuilder builder;
-    
+
             TypeParamRefTypeNestedImpl(TypeParamRef item){
                     this.builder = new TypeParamRefBuilder(this, item);
             }
             TypeParamRefTypeNestedImpl(){
                     this.builder = new TypeParamRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) PropertyFluentImpl.this.withTypeParamRefType(builder.build());
     }

@@ -20,20 +20,22 @@ import io.sundr.builder.Nested;
 import io.sundr.builder.Predicate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class TypeParamDefFluentImpl<A extends TypeParamDefFluent<A>> extends AttributeSupportFluentImpl<A> implements TypeParamDefFluent<A>{
 
     private String name;
-    private List<ClassRefBuilder> bounds =  new ArrayList<ClassRefBuilder>();
+    private final List<ClassRefBuilder> bounds =  new ArrayList<>();
 
     public TypeParamDefFluentImpl(){
     }
     public TypeParamDefFluentImpl(TypeParamDef instance){
-            this.withName(instance.getName()); 
-            this.withBounds(instance.getBounds()); 
-            this.withAttributes(instance.getAttributes()); 
+            this.withName(instance.getName());
+            this.withBounds(instance.getBounds());
+            this.withAttributes(instance.getAttributes());
     }
 
     public String getName(){
@@ -60,26 +62,22 @@ public class TypeParamDefFluentImpl<A extends TypeParamDefFluent<A>> extends Att
             return (A)withName(new String(arg1));
     }
 
-    public A addToBounds(int index,ClassRef item){
-            if (this.bounds == null) {this.bounds = new ArrayList<ClassRefBuilder>();}
+    public A addToBounds(int index,ClassRef item) {
             ClassRefBuilder builder = new ClassRefBuilder(item);_visitables.get("bounds").add(index >= 0 ? index : _visitables.get("bounds").size(), builder);this.bounds.add(index >= 0 ? index : bounds.size(), builder); return (A)this;
     }
 
-    public A setToBounds(int index,ClassRef item){
-            if (this.bounds == null) {this.bounds = new ArrayList<ClassRefBuilder>();}
+    public A setToBounds(int index,ClassRef item) {
             ClassRefBuilder builder = new ClassRefBuilder(item);
             if (index < 0 || index >= _visitables.get("bounds").size()) { _visitables.get("bounds").add(builder); } else { _visitables.get("bounds").set(index, builder);}
             if (index < 0 || index >= bounds.size()) { bounds.add(builder); } else { bounds.set(index, builder);}
              return (A)this;
     }
 
-    public A addToBounds(ClassRef... items){
-            if (this.bounds == null) {this.bounds = new ArrayList<ClassRefBuilder>();}
+    public A addToBounds(ClassRef... items) {
             for (ClassRef item : items) {ClassRefBuilder builder = new ClassRefBuilder(item);_visitables.get("bounds").add(builder);this.bounds.add(builder);} return (A)this;
     }
 
-    public A addAllToBounds(Collection<ClassRef> items){
-            if (this.bounds == null) {this.bounds = new ArrayList<ClassRefBuilder>();}
+    public A addAllToBounds(Collection<ClassRef> items) {
             for (ClassRef item : items) {ClassRefBuilder builder = new ClassRefBuilder(item);_visitables.get("bounds").add(builder);this.bounds.add(builder);} return (A)this;
     }
 
@@ -91,7 +89,7 @@ public class TypeParamDefFluentImpl<A extends TypeParamDefFluent<A>> extends Att
             for (ClassRef item : items) {ClassRefBuilder builder = new ClassRefBuilder(item);_visitables.get("bounds").remove(builder);if (this.bounds != null) {this.bounds.remove(builder);}} return (A)this;
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildBounds instead.
  * @return The buildable object.
@@ -124,14 +122,17 @@ public class TypeParamDefFluentImpl<A extends TypeParamDefFluent<A>> extends Att
             for (ClassRefBuilder item: bounds) { if(predicate.apply(item)){return true;} } return false;
     }
 
-    public A withBounds(List<ClassRef> bounds){
-            if (this.bounds != null) { _visitables.get("bounds").removeAll(this.bounds);}
-            if (bounds != null) {this.bounds = new ArrayList<ClassRefBuilder>(); for (ClassRef item : bounds){this.addToBounds(item);}} else { this.bounds = new ArrayList<ClassRefBuilder>();} return (A) this;
+    public A withBounds(List<ClassRef> bounds) {
+        _visitables.get("bounds").removeAll(this.bounds);
+        this.bounds.clear();
+        if (bounds != null) {
+            bounds.forEach(this::addToBounds);
+        }
+        return (A) this;
     }
 
-    public A withBounds(ClassRef... bounds){
-            if (this.bounds != null) {this.bounds.clear();}
-            if (bounds != null) {for (ClassRef item :bounds){ this.addToBounds(item);}} return (A) this;
+    public A withBounds(ClassRef... bounds) {
+        return withBounds(Arrays.asList(Optional.ofNullable(bounds).orElse(new ClassRef[0])));
     }
 
     public Boolean hasBounds(){
@@ -168,9 +169,9 @@ public class TypeParamDefFluentImpl<A extends TypeParamDefFluent<A>> extends Att
 
     public TypeParamDefFluent.BoundsNested<A> editMatchingBound(Predicate<ClassRefBuilder> predicate){
             int index = -1;
-            for (int i=0;i<bounds.size();i++) { 
+            for (int i=0;i<bounds.size();i++) {
             if (predicate.apply(bounds.get(i))) {index = i; break;}
-            } 
+            }
             if (index < 0) throw new RuntimeException("Can't edit matching bounds. No match found.");
             return setNewBoundLike(index, buildBound(index));
     }
@@ -190,7 +191,7 @@ public class TypeParamDefFluentImpl<A extends TypeParamDefFluent<A>> extends Att
 
             private final ClassRefBuilder builder;
         private final int index;
-    
+
             BoundsNestedImpl(int index,ClassRef item){
                     this.index = index;
                     this.builder = new ClassRefBuilder(this, item);
@@ -199,7 +200,7 @@ public class TypeParamDefFluentImpl<A extends TypeParamDefFluent<A>> extends Att
                     this.index = -1;
                     this.builder = new ClassRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) TypeParamDefFluentImpl.this.setToBounds(index, builder.build());
     }
