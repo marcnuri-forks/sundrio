@@ -16,17 +16,6 @@
 
 package io.sundr.builder.internal.processor;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
 import io.sundr.builder.Visitor;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.internal.BuilderContext;
@@ -37,6 +26,16 @@ import io.sundr.codegen.model.PropertyBuilder;
 import io.sundr.codegen.model.TypeDef;
 import io.sundr.codegen.model.TypeDefBuilder;
 import io.sundr.codegen.utils.ModelUtils;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 
 import static io.sundr.builder.Constants.BUILDABLE;
 import static io.sundr.builder.Constants.EDITABLE_ENABLED;
@@ -50,12 +49,11 @@ public class BuildableProcessor extends AbstractBuilderProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
         Elements elements = processingEnv.getElementUtils();
         Types types = processingEnv.getTypeUtils();
-        Filer filer = processingEnv.getFiler();
 
         BuilderContext ctx = null;
 
         //First pass register all buildables
-        Set<TypeDef> buildables = new HashSet<>();
+        final Queue<TypeDef> buildables = new LinkedList<>();
         for (TypeElement typeElement : annotations) {
             for (Element element : env.getElementsAnnotatedWith(typeElement)) {
                 Buildable buildable = element.getAnnotation(Buildable.class);
@@ -107,8 +105,15 @@ public class BuildableProcessor extends AbstractBuilderProcessor {
         addCustomMappings(ctx);
 
         ctx.getDefinitionRepository().updateReferenceMap();
-        generateBuildables(ctx, buildables);
-        generatePojos(ctx, buildables);
+        final int total = ctx.getBuildableRepository().getCount();
+        int count = 0;
+        TypeDef typeDef;
+        while((typeDef = buildables.poll()) != null){
+            double percentage = 100 * (count++) / total;
+            System.err.println(Math.round(percentage)+"%: " + typeDef.getFullyQualifiedName());
+            generateBuildable(ctx, typeDef);
+            generatePojos(ctx, typeDef);
+        }
         System.err.println("100%: Builder generation complete.");
         return false;
     }

@@ -17,19 +17,17 @@
 package io.sundr.builder.internal;
 
 import io.sundr.codegen.model.ClassRef;
-import io.sundr.codegen.model.ParameterReference;
 import io.sundr.codegen.model.TypeDef;
 import io.sundr.codegen.model.TypeRef;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class BuildableRepository {
 
-    private final Map<String, TypeDef> buildables = new HashMap<String, TypeDef>();
+    private final Map<String, TypeDef> buildables = new HashMap<>();
 
     public TypeDef register(TypeDef buildable) {
         if (buildable != null) {
@@ -38,8 +36,8 @@ public class BuildableRepository {
         return buildable;
     }
 
-    public Set<TypeDef> getBuildables() {
-        return Collections.unmodifiableSet(new LinkedHashSet<TypeDef>(buildables.values()));
+    public Collection<TypeDef> getBuildables() {
+        return Collections.unmodifiableCollection(buildables.values());
     }
 
     public TypeDef getBuildable(TypeRef type) {
@@ -58,6 +56,14 @@ public class BuildableRepository {
             return isBuildable(((ClassRef)type).getDefinition());
         }
         return false;
+    }
+
+    public void remove(TypeDef buildable) {
+        buildables.remove(buildable.getFullyQualifiedName());
+    }
+
+    public int getCount() {
+        return buildables.size();
     }
 
     public void clear() {
