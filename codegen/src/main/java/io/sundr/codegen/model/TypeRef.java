@@ -17,11 +17,15 @@
 package io.sundr.codegen.model;
 
 import java.util.Map;
+import java.util.UUID;
 
 public abstract class TypeRef extends AttributeSupport {
 
+    private final String key;
+
     public TypeRef(Map<AttributeKey, Object> attributes) {
         super(attributes);
+        key = UUID.randomUUID().toString();
     }
 
     public abstract boolean isAssignableFrom(TypeRef ref);
@@ -29,4 +33,8 @@ public abstract class TypeRef extends AttributeSupport {
     public abstract int getDimensions();
 
     public abstract TypeRef withDimensions(int dimensions);
+
+    public String getKey() {
+        return key;
+    }
 }

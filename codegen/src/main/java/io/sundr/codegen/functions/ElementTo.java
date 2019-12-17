@@ -16,8 +16,8 @@
 
 package io.sundr.codegen.functions;
 
-import io.sundr.FunctionFactory;
 import io.sundr.Function;
+import io.sundr.FunctionFactory;
 import io.sundr.codegen.CodegenContext;
 import io.sundr.codegen.DefinitionRepository;
 import io.sundr.codegen.converters.TypeRefTypeVisitor;
@@ -41,7 +41,6 @@ import io.sundr.codegen.model.TypeParamRefBuilder;
 import io.sundr.codegen.model.TypeRef;
 import io.sundr.codegen.model.VoidRef;
 import io.sundr.codegen.utils.TypeUtils;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -55,13 +54,14 @@ import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
-import java.lang.reflect.Type;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -207,7 +207,7 @@ public class ElementTo {
          }
      };
 
-    public static final Function<TypeElement, TypeDef> INTERNAL_TYPEDEF = new Function<TypeElement, TypeDef>() {
+    private static final Function<TypeElement, TypeDef> INTERNAL_TYPEDEF = new Function<TypeElement, TypeDef>() {
         public TypeDef apply(TypeElement classElement) {
             //Check SuperClass
             Kind kind = Kind.CLASS;
@@ -331,7 +331,7 @@ public class ElementTo {
     };
 
 
-    public static final Function<TypeElement, TypeDef> SHALLOW_TYPEDEF = new Function<TypeElement, TypeDef>() {
+    private static final Function<TypeElement, TypeDef> SHALLOW_TYPEDEF = new Function<TypeElement, TypeDef>() {
 
         public TypeDef apply(TypeElement classElement) {
             List<ClassRef> extendsList = new ArrayList<ClassRef>();
@@ -365,34 +365,42 @@ public class ElementTo {
         }
     };
 
-    public static final Function<TypeElement, TypeDef> TYPEDEF = FunctionFactory.cache(INTERNAL_TYPEDEF)
-            .withFallback(SHALLOW_TYPEDEF)
-            .withFallbackPredicate(IS_JAVA_ELEMENT)
-            .withMaximumRecursionLevel(10)
-            .withMaximumNestingDepth(10);
+    public static final Function<TypeElement, TypeDef> TYPEDEF = FunctionFactory
+        .cache(INTERNAL_TYPEDEF,
+            (typeElement, typeDef) -> Optional.ofNullable(typeElement.getQualifiedName()).orElse(null)
+        )
+        .withFallback(SHALLOW_TYPEDEF)
+        .withFallbackPredicate(IS_JAVA_ELEMENT)
+        .withMaximumRecursionLevel(10)
+        .withMaximumNestingDepth(10);
 
 
-    private static Function<AnnotationMirror, AnnotationRef> ANNOTATION_REF = FunctionFactory.cache(new Function<AnnotationMirror, AnnotationRef>() {
-        @Override
-        public AnnotationRef apply(AnnotationMirror item) {
-            TypeRef annotationType = item.getAnnotationType().accept(new TypeRefTypeVisitor(), 0);
-            Map<String, Object> parameters = new HashMap<String, Object>();
-            if (annotationType instanceof ClassRef) {
-                for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
+    private static Function<AnnotationMirror, AnnotationRef> ANNOTATION_REF = FunctionFactory
+        .cache(item -> {
+                TypeRef annotationType = item.getAnnotationType().accept(new TypeRefTypeVisitor(), 0);
+                Map<String, Object> parameters = new HashMap<>();
+                if (annotationType instanceof ClassRef) {
+                    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
                         : item.getElementValues().entrySet()) {
-                    String key = entry.getKey().toString().replace(EMPTY_PARENTHESIS, EMPTY);
-                    Object value = mapAnnotationValue(entry.getValue().getValue());
-                    parameters.put(key, value);
-                }
-                return new AnnotationRefBuilder()
+                        String key = entry.getKey().toString().replace(EMPTY_PARENTHESIS, EMPTY);
+                        Object value = mapAnnotationValue(entry.getValue().getValue());
+                        parameters.put(key, value);
+                    }
+                    return new AnnotationRefBuilder()
                         .withClassRef((ClassRef) annotationType)
                         .withParameters(parameters)
                         .build();
-            }
+                }
 
-            throw new IllegalStateException("Annotation type: ["+annotationType+"] is not a class reference.");
-        }
-    });
+                throw new IllegalStateException(
+                    "Annotation type: [" + annotationType + "] is not a class reference.");
+            },
+            (annotationMirror, annotationRef) ->
+                Optional.ofNullable(annotationMirror.getAnnotationType()
+                    .accept(new TypeRefTypeVisitor(), 0))
+                    .map(ClassRef.class::cast).map(ClassRef::getFullyQualifiedName)
+                    .orElse(null)
+        );
 
     private static Object mapAnnotationValue(Object value) {
         if (value instanceof Collection) {

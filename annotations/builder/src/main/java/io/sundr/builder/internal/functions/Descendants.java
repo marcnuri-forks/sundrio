@@ -16,17 +16,14 @@
 
 package io.sundr.builder.internal.functions;
 
-import io.sundr.FunctionFactory;
 import io.sundr.Function;
+import io.sundr.FunctionFactory;
 import io.sundr.builder.annotations.FilterDescendants;
 import io.sundr.builder.annotations.IgnoreDescendants;
-import io.sundr.builder.internal.BuildableRepository;
-import io.sundr.builder.internal.BuilderContext;
 import io.sundr.builder.internal.BuilderContextManager;
 import io.sundr.builder.internal.visitors.InitEnricher;
 import io.sundr.codegen.model.AnnotationRef;
 import io.sundr.codegen.model.ClassRef;
-
 import io.sundr.codegen.model.ClassRefBuilder;
 import io.sundr.codegen.model.Kind;
 import io.sundr.codegen.model.Property;
@@ -34,54 +31,58 @@ import io.sundr.codegen.model.PropertyBuilder;
 import io.sundr.codegen.model.TypeDef;
 import io.sundr.codegen.model.TypeRef;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import static io.sundr.builder.Constants.BUILDABLE_ENABLED;
 import static io.sundr.builder.Constants.DESCENDANT_OF;
 import static io.sundr.builder.Constants.GENERATED;
-import static io.sundr.builder.Constants.BUILDABLE_ENABLED;
 import static io.sundr.builder.Constants.ORIGIN_TYPEDEF;
+import static io.sundr.codegen.functions.Collections.IS_COLLECTION;
 import static io.sundr.codegen.functions.Collections.IS_MAP;
 import static io.sundr.codegen.utils.StringUtils.compact;
 import static io.sundr.codegen.utils.StringUtils.deCapitalizeFirst;
-import static io.sundr.codegen.functions.Collections.IS_COLLECTION;
 
-public class Descendants {
+class Descendants {
 
     private static final String VALUE = "value";
 
-    public static final Function<TypeDef, Set<TypeDef>> BUILDABLE_DECENDANTS = FunctionFactory.cache(new Function<TypeDef, Set<TypeDef>>() {
-        public Set<TypeDef> apply(TypeDef item) {
-            if (item.equals(TypeDef.OBJECT)) {
-                return new LinkedHashSet<TypeDef>();
-            }
+    private Descendants() {
+    }
 
-            Set<TypeDef> result = new LinkedHashSet<TypeDef>();
-            BuilderContext ctx = BuilderContextManager.getContext();
-            BuildableRepository repository = ctx.getBuildableRepository();
-
-            for (TypeDef type : repository.getBuildables()) {
-
-                if (type.getKind() == Kind.CLASS &&  !type.isAbstract() && isDescendant(type, item) && !type.equals(item) && !type.hasAttribute(GENERATED)) {
-                    result.add(type);
+    private static final Function<TypeDef, Set<TypeDef>> BUILDABLE_DESCENDANTS = FunctionFactory
+        .cache(
+            (Function<TypeDef, Set<TypeDef>>) item -> {
+                if (item.equals(TypeDef.OBJECT)) {
+                    return Collections.emptySet();
                 }
-            }
-            return result;
-        }
-    });
-
+                return BuilderContextManager.getContext().getBuildableRepository().getBuildables()
+                    .stream()
+                    .filter(type -> type.getKind() == Kind.CLASS)
+                    .filter(type -> !type.isAbstract())
+                    .filter(type -> isDescendant(type, item))
+                    .filter(type -> !type.equals(item))
+                    .filter(type -> !type.hasAttribute(GENERATED))
+                    .collect(Collectors.toSet());
+            },
+            (typeDef, typeDefSet) ->
+                Optional.ofNullable(typeDef).map(TypeDef::getFullyQualifiedName).orElse(null)
+        ).withMaximumRecursionLevel(2).withMaximumNestingDepth(2);
 
     /**
      * Find all buildable descendant equivalents of a property.
      */
-    public static Function<Property, Set<Property>> PROPERTY_BUILDABLE_DESCENDANTS = FunctionFactory.wrap(new Function<Property, Set<Property>>() {
+    static Function<Property, Set<Property>> PROPERTY_BUILDABLE_DESCENDANTS = FunctionFactory.wrap(new Function<Property, Set<Property>>() {
         public Set<Property> apply(Property property) {
-            Set<Property> result = new LinkedHashSet<Property>();
             if (isNestingIgnored(property)) {
-                return result;
+                return Collections.emptySet();
             }
+            Set<Property> result = new LinkedHashSet<Property>();
 
             TypeRef baseType = property.getTypeRef();
             TypeDef origin = property.getAttribute(ORIGIN_TYPEDEF);
@@ -91,7 +92,7 @@ public class Descendants {
                 if (unwrapped instanceof  ClassRef) {
                     ClassRef candidate = (ClassRef) unwrapped;
 
-                    for (TypeDef descendant : BUILDABLE_DECENDANTS.apply(candidate.getDefinition())) {
+                    for (TypeDef descendant : BUILDABLE_DESCENDANTS.apply(candidate.getDefinition())) {
                         ClassRef descendantRef = new ClassRefBuilder(descendant.toInternalReference())
                                 .build();
 
@@ -121,7 +122,7 @@ public class Descendants {
                 if (unwrapped instanceof  ClassRef) {
                     ClassRef candidate = (ClassRef) unwrapped;
 
-                    for (TypeDef descendant : BUILDABLE_DECENDANTS.apply(candidate.getDefinition())) {
+                    for (TypeDef descendant : BUILDABLE_DESCENDANTS.apply(candidate.getDefinition())) {
                         ClassRef descendantRef = new ClassRefBuilder(descendant.toInternalReference())
                                 .build();
 
@@ -148,7 +149,7 @@ public class Descendants {
                 }
             } else if (baseType instanceof  ClassRef) {
                 ClassRef candidate = (ClassRef) baseType;
-                for (TypeDef descendant : BUILDABLE_DECENDANTS.apply(candidate.getDefinition())) {
+                for (TypeDef descendant : BUILDABLE_DESCENDANTS.apply(candidate.getDefinition())) {
                     ClassRef descendantRef = new ClassRefBuilder(descendant.toInternalReference())
                             .build();
 

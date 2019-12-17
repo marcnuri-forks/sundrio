@@ -19,11 +19,14 @@ package io.sundr;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 
-public class FunctionFactory<X,Y> implements Function<X,Y> {
+public class FunctionFactory<X,Y,K> implements Function<X,Y> {
 
-    private final Map<X,Y> cache;
+    private final Map<K,Y> cache;
+    private final CacheFunction<K, Y> cacheFunction;
+    private final CacheKeyFunction<X, Y, K> cacheKeyFunction;
     private final Function<X,Y> function;
     private final Function<X,Y> fallback;
     private final Function<X, Boolean> fallbackPredicate;
@@ -34,8 +37,32 @@ public class FunctionFactory<X,Y> implements Function<X,Y> {
     private final Stack<X> ownStack;
     private static final Stack globalStack = new Stack();
 
-    public FunctionFactory(Map<X, Y> cache, Function<X, Y> function, Function<X, Y> fallback, Function<X, Boolean> fallbackPredicate, int maximumRecursionLevel, int maximumNestingDepth, Stack<X> ownStack) {
+    public FunctionFactory(Map<K, Y> cache, Function<X, Y> function, Function<X, Y> fallback, Function<X, Boolean> fallbackPredicate, int maximumRecursionLevel, int maximumNestingDepth, Stack<X> ownStack) {
+        this(cache,
+            (item, value) -> (K)item,
+            function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack
+        );
+    }
+
+    public FunctionFactory(Map<K, Y> cache,
+        CacheKeyFunction<X, Y, K> cacheKeyFunction, Function<X, Y> function,
+        Function<X, Y> fallback, Function<X, Boolean> fallbackPredicate, int maximumRecursionLevel,
+        int maximumNestingDepth, Stack<X> ownStack) {
+        this(cache,
+            putIfCacheAndKeyNotNull(),
+            cacheKeyFunction,
+            function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth,
+            ownStack
+        );
+    }
+
+    public FunctionFactory(Map<K, Y> cache, CacheFunction<K, Y> cacheFunction,
+        CacheKeyFunction<X, Y, K> cacheKeyFunction, Function<X, Y> function,
+        Function<X, Y> fallback, Function<X, Boolean> fallbackPredicate, int maximumRecursionLevel,
+        int maximumNestingDepth, Stack<X> ownStack) {
         this.cache = cache;
+        this.cacheFunction = cacheFunction;
+        this.cacheKeyFunction = cacheKeyFunction;
         this.function = function;
         this.fallback = fallback;
         this.fallbackPredicate = fallbackPredicate;
@@ -43,7 +70,6 @@ public class FunctionFactory<X,Y> implements Function<X,Y> {
         this.maximumNestingDepth = maximumNestingDepth;
         this.ownStack = ownStack;
     }
-
 
     public Y apply(X item) {
         Y result;
@@ -62,7 +88,7 @@ public class FunctionFactory<X,Y> implements Function<X,Y> {
                         result = fallback.apply(item);
                     }  else {
                         result = function.apply(item);
-                        cacheIfEnabled(item, result);
+                        cacheFunction.cache(cache, cacheKeyFunction.getKey(item, result), result);
                     }
                 }
             } finally {
@@ -73,34 +99,54 @@ public class FunctionFactory<X,Y> implements Function<X,Y> {
         }
     }
 
-    private void cacheIfEnabled(X item, Y result) {
-        if (cache != null) {
-            cache.put(item, result);
-        }
+    @FunctionalInterface
+    public interface CacheKeyFunction<X, Y, K> {
+        K getKey(X item, Y result);
     }
 
-
-    public static <X, Y> FunctionFactory<X, Y> cache(Function<X, Y> function) {
-        return new FunctionFactory<X, Y>(new HashMap<X, Y>(), function, null, null, 0, 0, new Stack<X>());
+    private static <K, V> CacheFunction<K, V> putIfCacheAndKeyNotNull() {
+        return (cacheInstance, key, value) -> Optional.ofNullable(cacheInstance)
+            .map(c -> key).ifPresent(k -> cacheInstance.put(key, value));
     }
 
-    public static <X, Y> FunctionFactory<X, Y> wrap(Function<X, Y> function) {
-        return new FunctionFactory<X, Y>(null, function, null, null, 0, 0, new Stack<X>());
+    @FunctionalInterface
+    public interface CacheFunction<K, V> {
+        void cache(Map<K, V> cache, K key, V value);
     }
 
-    public FunctionFactory<X,Y> withFallback(Function<X,Y> fallback) {
-        return new FunctionFactory<X, Y>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
+    public static <X, Y> FunctionFactory<X, Y, X> cache(Function<X, Y> function) {
+        return new FunctionFactory<X, Y, X>(new HashMap<X, Y>(), function, null, null, 0, 0, new Stack<X>());
     }
 
-    public FunctionFactory<X,Y> withMaximumRecursionLevel(int maximumRecursionLevel) {
-        return new FunctionFactory<X, Y>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
+    public static <X, Y, K> FunctionFactory<X, Y, K> cache(Function<X, Y> function,
+        CacheKeyFunction<X, Y, K> cacheKeyFunction) {
+        return new FunctionFactory<>(new HashMap<>(), cacheKeyFunction, function,
+            null, null, 0, 0, new Stack<X>());
     }
 
-    public FunctionFactory<X,Y> withMaximumNestingDepth(int maximumNestingDepth) {
-        return new FunctionFactory<X, Y>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
+    public static <X, Y, K> FunctionFactory<X, Y, K> cache(Function<X, Y> function,
+        CacheFunction<K, Y> cacheFunction, CacheKeyFunction<X, Y, K> cacheKeyFunction) {
+        return new FunctionFactory<>(new HashMap<>(), cacheFunction, cacheKeyFunction, function,
+            null, null, 0, 0, new Stack<X>());
     }
 
-    public FunctionFactory<X,Y> withFallbackPredicate(Function<X,Boolean> fallbackPredicate) {
-        return new FunctionFactory<X, Y>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
+    public static <X, Y> FunctionFactory<X, Y, X> wrap(Function<X, Y> function) {
+        return new FunctionFactory<X, Y, X>(null, function, null, null, 0, 0, new Stack<X>());
+    }
+
+    public FunctionFactory<X, Y, K> withFallback(Function<X,Y> fallback) {
+        return new FunctionFactory<X, Y, K>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
+    }
+
+    public FunctionFactory<X, Y, K> withMaximumRecursionLevel(int maximumRecursionLevel) {
+        return new FunctionFactory<X, Y, K>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
+    }
+
+    public FunctionFactory<X, Y, K> withMaximumNestingDepth(int maximumNestingDepth) {
+        return new FunctionFactory<X, Y, K>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
+    }
+
+    public FunctionFactory<X, Y, K> withFallbackPredicate(Function<X,Boolean> fallbackPredicate) {
+        return new FunctionFactory<X, Y, K>(cache, function, fallback, fallbackPredicate, maximumRecursionLevel, maximumNestingDepth, ownStack);
     }
 }

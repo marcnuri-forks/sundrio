@@ -18,6 +18,7 @@ package io.sundr.codegen.functions;
 
 import io.sundr.FunctionFactory;
 import io.sundr.Function;
+import io.sundr.FunctionFactory.CacheKeyFunction;
 import io.sundr.codegen.DefinitionRepository;
 import io.sundr.codegen.model.AnnotationRef;
 import io.sundr.codegen.model.AnnotationRefBuilder;
@@ -53,12 +54,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ClassTo {
 
     private static final String ARGUMENT_PREFIX = "arg";
+
+    private static <C, V> CacheKeyFunction<Class, V, String> cacheKeyForClass() {
+        return (clazz, value) -> Optional.ofNullable(clazz).map(Class::getCanonicalName).orElse(null);
+    }
 
     public static final Function<Class, Kind> KIND = FunctionFactory.cache(new Function<Class, Kind>() {
         public Kind apply(Class item) {
@@ -72,7 +78,7 @@ public class ClassTo {
                 return Kind.CLASS;
             }
         }
-    });
+    }, cacheKeyForClass());
 
     public static final Function<Type, TypeRef> TYPEREF = FunctionFactory.cache(new Function<Type, TypeRef>() {
         public TypeRef apply(Type item) {
@@ -133,7 +139,7 @@ public class ClassTo {
 
             return new AnnotationRefBuilder().withClassRef(classRef).build();
         }
-    });
+    }, (clazz, value) -> Optional.ofNullable(clazz).map(Class::getCanonicalName).orElse(null));
 
 
     private static final Function<Class, TypeDef> INTERNAL_TYPEDEF = new Function<Class, TypeDef>() {
@@ -212,7 +218,13 @@ public class ClassTo {
         }
     };
 
-    public static final Function<Class, TypeDef> TYPEDEF = FunctionFactory.cache(INTERNAL_TYPEDEF).withFallback(INTERNAL_SHALLOW_TYPEDEF).withMaximumRecursionLevel(5).withMaximumNestingDepth(5);
+    public static final Function<Class, TypeDef> TYPEDEF = FunctionFactory
+        .cache(
+            INTERNAL_TYPEDEF,
+            cacheKeyForClass()
+        )
+        .withFallback(INTERNAL_SHALLOW_TYPEDEF)
+        .withMaximumRecursionLevel(5).withMaximumNestingDepth(5);
 
     private static Function<Type, TypeParamDef> TYPEPARAMDEF = FunctionFactory.cache(new Function<Type, TypeParamDef>() {
 

@@ -18,6 +18,7 @@ package io.sundr.builder.internal.functions;
 
 import io.sundr.Function;
 import io.sundr.FunctionFactory;
+import io.sundr.FunctionFactory.CacheKeyFunction;
 import io.sundr.builder.Constants;
 import io.sundr.builder.internal.BuilderContextManager;
 import io.sundr.builder.internal.utils.BuilderUtils;
@@ -188,6 +189,15 @@ class ToMethod {
 
         private final String match;
         private final String nonMatch;
+    }
+
+    private static <V> CacheKeyFunction<Property, V, String> cacheKeyForProperty() {
+        return (property, value) -> Optional.ofNullable(property).map(p -> {
+            if (p.getTypeRef() instanceof ClassRef) {
+                return String.format("%s#%s", ((ClassRef)p.getTypeRef()).getFullyQualifiedName(), p.getName());
+            }
+            return null;
+        }).orElse(null);
     }
 
     static final Function<Property, Method> WITH = FunctionFactory.cache(new Function<Property, Method>() {
@@ -451,7 +461,7 @@ class ToMethod {
             methods.add(MatchingType.HAS.method(property, BOOLEAN_REF, predicate, unwrapped, annotations, Collections.emptyList()));
         }
         return methods;
-    });
+    }, cacheKeyForProperty());
 
     static final Function<Property, List<Method>> GETTER_ARRAY = FunctionFactory.cache(property -> {
         List<Method> methods = new ArrayList<>();
@@ -1043,7 +1053,7 @@ class ToMethod {
                 .addNewStringStatementStatement("if(key != null && value != null) {this." + property.getName() + ".put(key, value);} return (" + returnType + ")this;")
                 .endBlock()
                 .build();
-    });
+    }, cacheKeyForProperty());
 
 
     static final Function<Property, Method> REMOVE_MAP_FROM_MAP = FunctionFactory.cache(property -> {
@@ -1061,7 +1071,7 @@ class ToMethod {
                 .addNewStringStatementStatement("if(map != null) { for(Object key : map.keySet()) {if (this." + property.getName() + " != null){this." + property.getName() + ".remove(key);}}} return (" + returnType + ")this;")
                 .endBlock()
                 .build();
-    });
+    }, cacheKeyForProperty());
 
     static final Function<Property, Method> REMOVE_FROM_MAP = FunctionFactory.cache(property -> {
         TypeRef returnType = property.hasAttribute(GENERIC_TYPE_REF) ? property.getAttribute(GENERIC_TYPE_REF) : T_REF;
@@ -1080,7 +1090,7 @@ class ToMethod {
                 .addNewStringStatementStatement("if(key != null && this." + property.getName() + " != null) {this." + property.getName() + ".remove(key);} return (" + returnType + ")this;")
                 .endBlock()
                 .build();
-    });
+    }, cacheKeyForProperty());
 
     static final Function<Property, Method> WITH_NEW_NESTED = property -> {
         ClassRef baseType = (ClassRef) combine(UNWRAP_COLLECTION_OF, UNWRAP_OPTIONAL_OF, UNWRAP_OPTIONAL_OF).apply(property.getTypeRef());
@@ -1516,5 +1526,5 @@ class ToMethod {
                 .addNewStringStatementStatement("return and();")
                 .endBlock()
                 .build();
-    });
+    }, cacheKeyForProperty());
 }

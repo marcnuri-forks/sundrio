@@ -16,20 +16,6 @@
 
 package io.sundr.builder.internal.processor;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
 import io.sundr.builder.Visitor;
 import io.sundr.builder.annotations.ExternalBuildables;
 import io.sundr.builder.internal.BuilderContext;
@@ -40,6 +26,19 @@ import io.sundr.codegen.model.PropertyBuilder;
 import io.sundr.codegen.model.TypeDef;
 import io.sundr.codegen.model.TypeDefBuilder;
 import io.sundr.codegen.utils.ModelUtils;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 import static io.sundr.builder.Constants.EDITABLE_ENABLED;
 import static io.sundr.builder.Constants.EXTERNAL_BUILDABLE;
@@ -53,12 +52,11 @@ public class ExternalBuildableProcessor extends AbstractBuilderProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
         Elements elements = processingEnv.getElementUtils();
         Types types = processingEnv.getTypeUtils();
-        Filer filer = processingEnv.getFiler();
 
 
         ExternalBuildables generated = null;
         BuilderContext ctx = null;
-        Set<TypeDef> buildables = new HashSet<>();
+        final Queue<TypeDef> buildables = new LinkedList<>();
         //First pass register all externals
         for (TypeElement annotation : annotations) {
             for (Element element : env.getElementsAnnotatedWith(annotation)) {
@@ -136,8 +134,15 @@ public class ExternalBuildableProcessor extends AbstractBuilderProcessor {
         generateLocalDependenciesIfNeeded();
         addCustomMappings(ctx);
         ctx.getDefinitionRepository().updateReferenceMap();
-        generateBuildables(ctx, buildables);
-        generatePojos(ctx, buildables);
+        final int total = ctx.getBuildableRepository().getCount();
+        int count = 0;
+        TypeDef typeDef;
+        while((typeDef = buildables.poll()) != null){
+            double percentage = 100 * (count++) / total;
+            System.err.println(Math.round(percentage)+"%: " + typeDef.getFullyQualifiedName());
+            generateBuildable(ctx, typeDef);
+            generatePojos(ctx, typeDef);
+        }
         System.err.println("100%: Builder generation complete.");
         return true;
     }
