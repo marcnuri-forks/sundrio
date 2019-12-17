@@ -18,18 +18,38 @@ package io.sundr.builder.internal.functions;
 
 import io.sundr.Function;
 import io.sundr.FunctionFactory;
+import io.sundr.FunctionFactory.CacheKeyFunction;
 import io.sundr.builder.internal.BuilderContext;
 import io.sundr.builder.internal.BuilderContextManager;
 import io.sundr.codegen.functions.Collections;
-import io.sundr.codegen.model.*;
+import io.sundr.codegen.model.ClassRef;
+import io.sundr.codegen.model.ClassRefBuilder;
+import io.sundr.codegen.model.Kind;
+import io.sundr.codegen.model.PrimitiveRef;
+import io.sundr.codegen.model.PrimitiveRefBuilder;
+import io.sundr.codegen.model.TypeDef;
+import io.sundr.codegen.model.TypeDefBuilder;
+import io.sundr.codegen.model.TypeParamDef;
+import io.sundr.codegen.model.TypeParamDefBuilder;
+import io.sundr.codegen.model.TypeParamRef;
+import io.sundr.codegen.model.TypeParamRefBuilder;
+import io.sundr.codegen.model.TypeRef;
+import io.sundr.codegen.model.WildcardRef;
+import io.sundr.codegen.model.WildcardRefBuilder;
 import io.sundr.codegen.utils.TypeUtils;
-
 import javax.lang.model.element.Modifier;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static io.sundr.builder.internal.utils.BuilderUtils.*;
-import static io.sundr.codegen.Constants.*;
+import static io.sundr.builder.internal.utils.BuilderUtils.findBuildableSuperClass;
+import static io.sundr.builder.internal.utils.BuilderUtils.findBuildableSuperClassRef;
+import static io.sundr.builder.internal.utils.BuilderUtils.getNextGeneric;
+import static io.sundr.codegen.Constants.BOXED_PARSE_METHOD;
+import static io.sundr.codegen.Constants.BOXED_PRIMITIVE_TYPES;
+import static io.sundr.codegen.Constants.PRIMITIVE_TYPES;
+import static io.sundr.codegen.Constants.Q;
 
 
 public class TypeAs {
@@ -207,10 +227,22 @@ public class TypeAs {
         }
     };
 
-    //TODO: Need a home for: .withDefaultImplementation(Constants.ARRAY_LIST)
-    private static final Function<TypeRef, TypeRef> LIST_OF = FunctionFactory.cache(Collections.LIST::toReference);
+    private static <V> CacheKeyFunction<TypeRef, V, String> typeRefToKey() {
+        return (item, value) -> Optional.ofNullable(item)
+            .filter(ClassRef.class::isInstance)
+            .map(ClassRef.class::cast).map(ClassRef::getFullyQualifiedName).orElse(null);
+    }
 
-    static final Function<TypeRef, TypeRef> ARRAY_AS_LIST = FunctionFactory.cache(item -> LIST_OF.apply(UNWRAP_ARRAY_OF.apply(item)));
+    //TODO: Need a home for: .withDefaultImplementation(Constants.ARRAY_LIST)
+    private static final Function<TypeRef, TypeRef> LIST_OF = FunctionFactory.cache(
+        Collections.LIST::toReference,
+        typeRefToKey()
+    );
+
+    static final Function<TypeRef, TypeRef> ARRAY_AS_LIST = FunctionFactory.cache(
+        item -> LIST_OF.apply(UNWRAP_ARRAY_OF.apply(item)),
+        typeRefToKey()
+    );
 
     public static final Function<TypeRef, TypeRef> UNWRAP_COLLECTION_OF = type -> {
         if (type instanceof ClassRef) {
@@ -258,27 +290,32 @@ public class TypeAs {
         return type;
     };
 
-    static final Function<TypeRef, TypeRef> BOXED_OF = FunctionFactory.cache(type -> {
-        int index = 0;
-        for (TypeRef primitive : PRIMITIVE_TYPES) {
-            if (primitive.equals(type)) {
-                return BOXED_PRIMITIVE_TYPES[index];
+    static final Function<TypeRef, TypeRef> BOXED_OF = FunctionFactory.cache(
+        type -> {
+            int index = 0;
+            for (TypeRef primitive : PRIMITIVE_TYPES) {
+                if (primitive.equals(type)) {
+                    return BOXED_PRIMITIVE_TYPES[index];
+                }
+                index++;
             }
-            index++;
-        }
-        return type;
-    });
+            return type;
+        },
+        typeRefToKey()
+    );
 
     static final Function<TypeRef, String> PARSER_OF = FunctionFactory.cache(type -> {
-        int index = 0;
-        for (TypeRef primitive : PRIMITIVE_TYPES) {
-            if (primitive.equals(type)) {
-                return BOXED_PARSE_METHOD[index];
+            int index = 0;
+            for (TypeRef primitive : PRIMITIVE_TYPES) {
+                if (primitive.equals(type)) {
+                    return BOXED_PARSE_METHOD[index];
+                }
+                index++;
             }
-            index++;
-        }
-        return null;
-    });
+            return null;
+        },
+        typeRefToKey()
+    );
 
 
 

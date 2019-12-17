@@ -68,7 +68,7 @@ public abstract class TypedVisitor<V> implements Visitor<V> {
      * @return a list of the raw classes for the actual type arguments.
      */
     static <T> List<Class> getTypeArguments(Class<T> baseClass, Class<? extends T> childClass) {
-        Map<Type, Type> resolvedTypes = new LinkedHashMap<Type, Type>();
+        final Map<Type, Type> resolvedTypes = new LinkedHashMap<>();
         Type type = childClass;
         // start walking up the inheritance hierarchy until we hit baseClass
         while (! getClass(type).equals(baseClass)) {

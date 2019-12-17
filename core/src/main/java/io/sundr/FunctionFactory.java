@@ -115,7 +115,7 @@ public class FunctionFactory<X,Y,K> implements Function<X,Y> {
     }
 
     public static <X, Y> FunctionFactory<X, Y, X> cache(Function<X, Y> function) {
-        return new FunctionFactory<X, Y, X>(new HashMap<X, Y>(), function, null, null, 0, 0, new Stack<X>());
+        return new FunctionFactory<X, Y, X>(new HashMap<>(), function, null, null, 0, 0, new Stack<X>());
     }
 
     public static <X, Y, K> FunctionFactory<X, Y, K> cache(Function<X, Y> function,

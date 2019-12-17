@@ -17,6 +17,8 @@
 package io.sundr.codegen.model;
 
 
+import java.util.Objects;
+
 public final class AttributeKey<T> {
 
     private final String name;
@@ -35,4 +37,21 @@ public final class AttributeKey<T> {
         return type;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AttributeKey<?> that = (AttributeKey<?>) o;
+        return Objects.equals(name, that.name) &&
+            Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, type);
+    }
 }

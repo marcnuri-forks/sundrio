@@ -21,55 +21,53 @@ import io.sundr.builder.Predicate;
 import io.sundr.builder.VisitableBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupportFluentImpl<A> implements MethodFluent<A>{
 
-    private List<String> comments = new ArrayList<String>();
-    private List<AnnotationRefBuilder> annotations =  new ArrayList<AnnotationRefBuilder>();
-    private List<TypeParamDefBuilder> parameters =  new ArrayList<TypeParamDefBuilder>();
+    private final List<String> comments = new ArrayList<>();
+    private List<AnnotationRefBuilder> annotations =  new ArrayList<>();
+    private final List<TypeParamDefBuilder> parameters =  new ArrayList<>();
     private String name;
     private VisitableBuilder<? extends TypeRef,?> returnType;
-    private List<PropertyBuilder> arguments =  new ArrayList<PropertyBuilder>();
+    private List<PropertyBuilder> arguments =  new ArrayList<>();
     private boolean varArgPreferred;
-    private List<ClassRefBuilder> exceptions =  new ArrayList<ClassRefBuilder>();
+    private List<ClassRefBuilder> exceptions =  new ArrayList<>();
     private BlockBuilder block;
 
     public MethodFluentImpl(){
     }
     public MethodFluentImpl(Method instance){
-            this.withComments(instance.getComments()); 
-            this.withAnnotations(instance.getAnnotations()); 
-            this.withParameters(instance.getParameters()); 
-            this.withName(instance.getName()); 
-            this.withReturnType(instance.getReturnType()); 
-            this.withArguments(instance.getArguments()); 
-            this.withVarArgPreferred(instance.isVarArgPreferred()); 
-            this.withExceptions(instance.getExceptions()); 
-            this.withBlock(instance.getBlock()); 
-            this.withModifiers(instance.getModifiers()); 
-            this.withAttributes(instance.getAttributes()); 
+            this.withComments(instance.getComments());
+            this.withAnnotations(instance.getAnnotations());
+            this.withParameters(instance.getParameters());
+            this.withName(instance.getName());
+            this.withReturnType(instance.getReturnType());
+            this.withArguments(instance.getArguments());
+            this.withVarArgPreferred(instance.isVarArgPreferred());
+            this.withExceptions(instance.getExceptions());
+            this.withBlock(instance.getBlock());
+            this.withModifiers(instance.getModifiers());
+            this.withAttributes(instance.getAttributes());
     }
 
     public A addToComments(int index,String item){
-            if (this.comments == null) {this.comments = new ArrayList<String>();}
             this.comments.add(index, item);
             return (A)this;
     }
 
     public A setToComments(int index,String item){
-            if (this.comments == null) {this.comments = new ArrayList<String>();}
             this.comments.set(index, item); return (A)this;
     }
 
     public A addToComments(String... items){
-            if (this.comments == null) {this.comments = new ArrayList<String>();}
             for (String item : items) {this.comments.add(item);} return (A)this;
     }
 
     public A addAllToComments(Collection<String> items){
-            if (this.comments == null) {this.comments = new ArrayList<String>();}
             for (String item : items) {this.comments.add(item);} return (A)this;
     }
 
@@ -106,13 +104,16 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     }
 
     public A withComments(List<String> comments){
-            if (this.comments != null) { _visitables.get("comments").removeAll(this.comments);}
-            if (comments != null) {this.comments = new ArrayList<String>(); for (String item : comments){this.addToComments(item);}} else { this.comments = new ArrayList<String>();} return (A) this;
+        _visitables.get("comments").removeAll(this.comments);
+        this.comments.clear();
+        if (comments != null) {
+            comments.forEach(this::addToComments);
+        }
+        return (A) this;
     }
 
     public A withComments(String... comments){
-            if (this.comments != null) {this.comments.clear();}
-            if (comments != null) {for (String item :comments){ this.addToComments(item);}} return (A) this;
+        return withComments(Arrays.asList(Optional.ofNullable(comments).orElse(new String[0])));
     }
 
     public Boolean hasComments(){
@@ -162,7 +163,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
             for (AnnotationRef item : items) {AnnotationRefBuilder builder = new AnnotationRefBuilder(item);_visitables.get("annotations").remove(builder);if (this.annotations != null) {this.annotations.remove(builder);}} return (A)this;
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildAnnotations instead.
  * @return The buildable object.
@@ -239,20 +240,18 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
     public MethodFluent.AnnotationsNested<A> editMatchingAnnotation(Predicate<AnnotationRefBuilder> predicate){
             int index = -1;
-            for (int i=0;i<annotations.size();i++) { 
+            for (int i=0;i<annotations.size();i++) {
             if (predicate.apply(annotations.get(i))) {index = i; break;}
-            } 
+            }
             if (index < 0) throw new RuntimeException("Can't edit matching annotations. No match found.");
             return setNewAnnotationLike(index, buildAnnotation(index));
     }
 
     public A addToParameters(int index,TypeParamDef item){
-            if (this.parameters == null) {this.parameters = new ArrayList<TypeParamDefBuilder>();}
             TypeParamDefBuilder builder = new TypeParamDefBuilder(item);_visitables.get("parameters").add(index >= 0 ? index : _visitables.get("parameters").size(), builder);this.parameters.add(index >= 0 ? index : parameters.size(), builder); return (A)this;
     }
 
     public A setToParameters(int index,TypeParamDef item){
-            if (this.parameters == null) {this.parameters = new ArrayList<TypeParamDefBuilder>();}
             TypeParamDefBuilder builder = new TypeParamDefBuilder(item);
             if (index < 0 || index >= _visitables.get("parameters").size()) { _visitables.get("parameters").add(builder); } else { _visitables.get("parameters").set(index, builder);}
             if (index < 0 || index >= parameters.size()) { parameters.add(builder); } else { parameters.set(index, builder);}
@@ -260,12 +259,10 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     }
 
     public A addToParameters(TypeParamDef... items){
-            if (this.parameters == null) {this.parameters = new ArrayList<TypeParamDefBuilder>();}
             for (TypeParamDef item : items) {TypeParamDefBuilder builder = new TypeParamDefBuilder(item);_visitables.get("parameters").add(builder);this.parameters.add(builder);} return (A)this;
     }
 
     public A addAllToParameters(Collection<TypeParamDef> items){
-            if (this.parameters == null) {this.parameters = new ArrayList<TypeParamDefBuilder>();}
             for (TypeParamDef item : items) {TypeParamDefBuilder builder = new TypeParamDefBuilder(item);_visitables.get("parameters").add(builder);this.parameters.add(builder);} return (A)this;
     }
 
@@ -277,7 +274,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
             for (TypeParamDef item : items) {TypeParamDefBuilder builder = new TypeParamDefBuilder(item);_visitables.get("parameters").remove(builder);if (this.parameters != null) {this.parameters.remove(builder);}} return (A)this;
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildParameters instead.
  * @return The buildable object.
@@ -310,14 +307,17 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
             for (TypeParamDefBuilder item: parameters) { if(predicate.apply(item)){return true;} } return false;
     }
 
-    public A withParameters(List<TypeParamDef> parameters){
-            if (this.parameters != null) { _visitables.get("parameters").removeAll(this.parameters);}
-            if (parameters != null) {this.parameters = new ArrayList<TypeParamDefBuilder>(); for (TypeParamDef item : parameters){this.addToParameters(item);}} else { this.parameters = new ArrayList<TypeParamDefBuilder>();} return (A) this;
+    public A withParameters(List<TypeParamDef> parameters) {
+        _visitables.get("parameters").removeAll(this.parameters);
+        this.parameters.clear();
+        if (parameters != null) {
+            parameters.forEach(this::addToParameters);
+        }
+        return (A) this;
     }
 
-    public A withParameters(TypeParamDef... parameters){
-            if (this.parameters != null) {this.parameters.clear();}
-            if (parameters != null) {for (TypeParamDef item :parameters){ this.addToParameters(item);}} return (A) this;
+    public A withParameters(TypeParamDef... parameters) {
+        return withParameters(Arrays.asList(Optional.ofNullable(parameters).orElse(new TypeParamDef[0])));
     }
 
     public Boolean hasParameters(){
@@ -354,9 +354,9 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
     public MethodFluent.ParametersNested<A> editMatchingParameter(Predicate<TypeParamDefBuilder> predicate){
             int index = -1;
-            for (int i=0;i<parameters.size();i++) { 
+            for (int i=0;i<parameters.size();i++) {
             if (predicate.apply(parameters.get(i))) {index = i; break;}
-            } 
+            }
             if (index < 0) throw new RuntimeException("Can't edit matching parameters. No match found.");
             return setNewParameterLike(index, buildParameter(index));
     }
@@ -385,7 +385,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
             return (A)withName(new String(arg1));
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildReturnType instead.
  * @return The buildable object.
@@ -508,7 +508,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
             for (Property item : items) {PropertyBuilder builder = new PropertyBuilder(item);_visitables.get("arguments").remove(builder);if (this.arguments != null) {this.arguments.remove(builder);}} return (A)this;
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildArguments instead.
  * @return The buildable object.
@@ -585,9 +585,9 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
     public MethodFluent.ArgumentsNested<A> editMatchingArgument(Predicate<PropertyBuilder> predicate){
             int index = -1;
-            for (int i=0;i<arguments.size();i++) { 
+            for (int i=0;i<arguments.size();i++) {
             if (predicate.apply(arguments.get(i))) {index = i; break;}
-            } 
+            }
             if (index < 0) throw new RuntimeException("Can't edit matching arguments. No match found.");
             return setNewArgumentLike(index, buildArgument(index));
     }
@@ -635,7 +635,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
             for (ClassRef item : items) {ClassRefBuilder builder = new ClassRefBuilder(item);_visitables.get("exceptions").remove(builder);if (this.exceptions != null) {this.exceptions.remove(builder);}} return (A)this;
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildExceptions instead.
  * @return The buildable object.
@@ -712,14 +712,14 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
     public MethodFluent.ExceptionsNested<A> editMatchingException(Predicate<ClassRefBuilder> predicate){
             int index = -1;
-            for (int i=0;i<exceptions.size();i++) { 
+            for (int i=0;i<exceptions.size();i++) {
             if (predicate.apply(exceptions.get(i))) {index = i; break;}
-            } 
+            }
             if (index < 0) throw new RuntimeException("Can't edit matching exceptions. No match found.");
             return setNewExceptionLike(index, buildException(index));
     }
 
-    
+
 /**
  * This method has been deprecated, please use method buildBlock instead.
  * @return The buildable object.
@@ -783,7 +783,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
             private final AnnotationRefBuilder builder;
         private final int index;
-    
+
             AnnotationsNestedImpl(int index,AnnotationRef item){
                     this.index = index;
                     this.builder = new AnnotationRefBuilder(this, item);
@@ -792,7 +792,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
                     this.index = -1;
                     this.builder = new AnnotationRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.setToAnnotations(index, builder.build());
     }
@@ -805,7 +805,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
             private final TypeParamDefBuilder builder;
         private final int index;
-    
+
             ParametersNestedImpl(int index,TypeParamDef item){
                     this.index = index;
                     this.builder = new TypeParamDefBuilder(this, item);
@@ -814,7 +814,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
                     this.index = -1;
                     this.builder = new TypeParamDefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.setToParameters(index, builder.build());
     }
@@ -826,14 +826,14 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     public class PrimitiveRefReturnTypeNestedImpl<N> extends PrimitiveRefFluentImpl<MethodFluent.PrimitiveRefReturnTypeNested<N>> implements MethodFluent.PrimitiveRefReturnTypeNested<N>,Nested<N>{
 
             private final PrimitiveRefBuilder builder;
-    
+
             PrimitiveRefReturnTypeNestedImpl(PrimitiveRef item){
                     this.builder = new PrimitiveRefBuilder(this, item);
             }
             PrimitiveRefReturnTypeNestedImpl(){
                     this.builder = new PrimitiveRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.withPrimitiveRefReturnType(builder.build());
     }
@@ -845,14 +845,14 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     public class VoidRefReturnTypeNestedImpl<N> extends VoidRefFluentImpl<MethodFluent.VoidRefReturnTypeNested<N>> implements MethodFluent.VoidRefReturnTypeNested<N>,Nested<N>{
 
             private final VoidRefBuilder builder;
-    
+
             VoidRefReturnTypeNestedImpl(VoidRef item){
                     this.builder = new VoidRefBuilder(this, item);
             }
             VoidRefReturnTypeNestedImpl(){
                     this.builder = new VoidRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.withVoidRefReturnType(builder.build());
     }
@@ -864,14 +864,14 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     public class WildcardRefReturnTypeNestedImpl<N> extends WildcardRefFluentImpl<MethodFluent.WildcardRefReturnTypeNested<N>> implements MethodFluent.WildcardRefReturnTypeNested<N>,Nested<N>{
 
             private final WildcardRefBuilder builder;
-    
+
             WildcardRefReturnTypeNestedImpl(WildcardRef item){
                     this.builder = new WildcardRefBuilder(this, item);
             }
             WildcardRefReturnTypeNestedImpl(){
                     this.builder = new WildcardRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.withWildcardRefReturnType(builder.build());
     }
@@ -883,14 +883,14 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     public class ClassRefReturnTypeNestedImpl<N> extends ClassRefFluentImpl<MethodFluent.ClassRefReturnTypeNested<N>> implements MethodFluent.ClassRefReturnTypeNested<N>,Nested<N>{
 
             private final ClassRefBuilder builder;
-    
+
             ClassRefReturnTypeNestedImpl(ClassRef item){
                     this.builder = new ClassRefBuilder(this, item);
             }
             ClassRefReturnTypeNestedImpl(){
                     this.builder = new ClassRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.withClassRefReturnType(builder.build());
     }
@@ -902,14 +902,14 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     public class TypeParamRefReturnTypeNestedImpl<N> extends TypeParamRefFluentImpl<MethodFluent.TypeParamRefReturnTypeNested<N>> implements MethodFluent.TypeParamRefReturnTypeNested<N>,Nested<N>{
 
             private final TypeParamRefBuilder builder;
-    
+
             TypeParamRefReturnTypeNestedImpl(TypeParamRef item){
                     this.builder = new TypeParamRefBuilder(this, item);
             }
             TypeParamRefReturnTypeNestedImpl(){
                     this.builder = new TypeParamRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.withTypeParamRefReturnType(builder.build());
     }
@@ -922,7 +922,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
             private final PropertyBuilder builder;
         private final int index;
-    
+
             ArgumentsNestedImpl(int index,Property item){
                     this.index = index;
                     this.builder = new PropertyBuilder(this, item);
@@ -931,7 +931,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
                     this.index = -1;
                     this.builder = new PropertyBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.setToArguments(index, builder.build());
     }
@@ -944,7 +944,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
 
             private final ClassRefBuilder builder;
         private final int index;
-    
+
             ExceptionsNestedImpl(int index,ClassRef item){
                     this.index = index;
                     this.builder = new ClassRefBuilder(this, item);
@@ -953,7 +953,7 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
                     this.index = -1;
                     this.builder = new ClassRefBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.setToExceptions(index, builder.build());
     }
@@ -965,14 +965,14 @@ public class MethodFluentImpl<A extends MethodFluent<A>> extends ModifierSupport
     public class BlockNestedImpl<N> extends BlockFluentImpl<MethodFluent.BlockNested<N>> implements MethodFluent.BlockNested<N>,Nested<N>{
 
             private final BlockBuilder builder;
-    
+
             BlockNestedImpl(Block item){
                     this.builder = new BlockBuilder(this, item);
             }
             BlockNestedImpl(){
                     this.builder = new BlockBuilder(this);
             }
-    
+
     public N and(){
             return (N) MethodFluentImpl.this.withBlock(builder.build());
     }

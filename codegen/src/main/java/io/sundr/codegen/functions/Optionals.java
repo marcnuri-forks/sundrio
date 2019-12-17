@@ -18,21 +18,16 @@ package io.sundr.codegen.functions;
 
 import io.sundr.Function;
 import io.sundr.FunctionFactory;
+import io.sundr.FunctionFactory.CacheKeyFunction;
+import io.sundr.codegen.model.ClassRef;
 import io.sundr.codegen.model.TypeDef;
 import io.sundr.codegen.model.TypeRef;
 import io.sundr.codegen.utils.TypeUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
-import java.util.Set;
 
 import static io.sundr.codegen.functions.ClassTo.TYPEDEF;
 
@@ -43,28 +38,30 @@ public class Optionals {
     public static final TypeDef OPTIONAL_DOUBLE = TYPEDEF.apply(OptionalDouble.class);
     public static final TypeDef OPTIONAL_LONG = TYPEDEF.apply(OptionalLong.class);
 
-    public static final Function<TypeRef, Boolean> IS_OPTIONAL = FunctionFactory.cache(new Function<TypeRef, Boolean>() {
-        public Boolean apply(TypeRef type) {
-           return TypeUtils.isInstanceOf(type, OPTIONAL, IS_OPTIONAL);
-        }
-    });
+    private static <V> CacheKeyFunction<TypeRef, V, String> cacheKeyForTypeRef() {
+        return (typeRef, value) -> Optional.of(typeRef)
+            .filter(ClassRef.class::isInstance)
+            .map(ClassRef.class::cast).map(ClassRef::getFullyQualifiedName).orElse(null);
+    }
 
-    public static final Function<TypeRef, Boolean> IS_OPTIONAL_INT = FunctionFactory.cache(new Function<TypeRef, Boolean>() {
-        public Boolean apply(TypeRef type) {
-            return TypeUtils.isInstanceOf(type, OPTIONAL_INT, IS_OPTIONAL_INT);
-        }
-    });
+    public static final Function<TypeRef, Boolean> IS_OPTIONAL = FunctionFactory.cache(
+        type -> TypeUtils.isInstanceOf(type, OPTIONAL, Optionals.IS_OPTIONAL),
+        cacheKeyForTypeRef()
+    );
 
-    public static final Function<TypeRef, Boolean> IS_OPTIONAL_DOUBLE = FunctionFactory.cache(new Function<TypeRef, Boolean>() {
-        public Boolean apply(TypeRef type) {
-            return TypeUtils.isInstanceOf(type, OPTIONAL_DOUBLE, IS_OPTIONAL_DOUBLE);
-        }
-    });
+    public static final Function<TypeRef, Boolean> IS_OPTIONAL_INT = FunctionFactory.cache(
+        type -> TypeUtils.isInstanceOf(type, OPTIONAL_INT, Optionals.IS_OPTIONAL_INT),
+        cacheKeyForTypeRef()
+    );
 
-    public static final Function<TypeRef, Boolean> IS_OPTIONAL_LONG = FunctionFactory.cache(new Function<TypeRef, Boolean>() {
-        public Boolean apply(TypeRef type) {
-            return TypeUtils.isInstanceOf(type, OPTIONAL_LONG, IS_OPTIONAL_LONG);
-        }
-    });
+    public static final Function<TypeRef, Boolean> IS_OPTIONAL_DOUBLE = FunctionFactory.cache(
+        type -> TypeUtils.isInstanceOf(type, OPTIONAL_DOUBLE, Optionals.IS_OPTIONAL_DOUBLE),
+        cacheKeyForTypeRef()
+    );
+
+    public static final Function<TypeRef, Boolean> IS_OPTIONAL_LONG = FunctionFactory.cache(
+        type -> TypeUtils.isInstanceOf(type, OPTIONAL_LONG, Optionals.IS_OPTIONAL_LONG),
+        cacheKeyForTypeRef()
+    );
 
 }

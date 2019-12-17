@@ -200,6 +200,10 @@ class ToMethod {
         }).orElse(null);
     }
 
+    private static <V> CacheKeyFunction<Property, V, Property> inefficientCacheKeyForProperty() {
+        return (property, value) -> property;
+    }
+
     static final Function<Property, Method> WITH = FunctionFactory.cache(new Function<Property, Method>() {
 
         public Method apply(Property property) {
@@ -274,7 +278,7 @@ class ToMethod {
             statements.add(new StringStatement("this." + fieldName + "=" + argumentName + "; return (" + returnType + ") this;"));
             return statements;
         }
-    });
+    }, inefficientCacheKeyForProperty());
 
     static final Function<Property, Method> WITH_ARRAY = FunctionFactory.cache(property -> {
         TypeRef returnType = property.hasAttribute(GENERIC_TYPE_REF) ? property.getAttribute(GENERIC_TYPE_REF) : T_REF;
@@ -297,7 +301,7 @@ class ToMethod {
                 .addNewStringStatementStatement("if (" + property.getName() + " != null) {for (" + unwraped.toString() + " item :" + property.getName() + "){ this." + addToMethodName + "(item);}} return (" + returnType + ") this;")
                 .endBlock()
                 .build();
-    });
+    }, cacheKeyForProperty());
 
     static final Function<Property, List<Method>> WITH_OPTIONAL = FunctionFactory.cache(property -> {
         List<Method> methods = new ArrayList<>();
@@ -345,7 +349,7 @@ class ToMethod {
         );
 
         return methods;
-    });
+    }, inefficientCacheKeyForProperty());
 
     static final Function<Property, Method> HAS = FunctionFactory.cache(property -> {
         String prefix = "has";
@@ -371,7 +375,7 @@ class ToMethod {
                 .withStatements(statements)
                 .endBlock()
                 .build();
-    });
+    }, cacheKeyForProperty());
 
     static final Function<Property, List<Method>> GETTER = FunctionFactory.cache(property -> {
         List<Method> methods = new ArrayList<>();
@@ -522,7 +526,7 @@ class ToMethod {
             methods.add(MatchingType.HAS.method(property, BOOLEAN_REF, predicate, builderRef, Collections.emptyList(), Collections.emptyList()));
         }
         return methods;
-    });
+    }, cacheKeyForProperty());
 
     static final Function<Property, List<Method>> ADD_TO_COLLECTION = FunctionFactory.cache(new Function<Property, List<Method>>() {
         public List<Method> apply(final Property property) {
@@ -739,7 +743,7 @@ class ToMethod {
         private Statement createAddToDescendantsFallback(String type, String name) {
             return new StringStatement("else {  VisitableBuilder<? extends " + type + ",?> builder = builderOf(item); _visitables.get(\"" + name + "\").add(builder);this." + name + ".add(builder); }");
         }
-    });
+    }, inefficientCacheKeyForProperty());
 
 
     static final Function<Property, List<Method>> REMOVE_FROM_COLLECTION = FunctionFactory.cache(new Function<Property, List<Method>>() {
@@ -914,7 +918,7 @@ class ToMethod {
         private Statement createRemoveFromDescendantsFallback(String type, String name) {
             return new StringStatement("else {  VisitableBuilder<? extends " + type + ",?> builder = builderOf(item); _visitables.get(\"" + name + "\").remove(builder);this." + name + ".remove(builder); }");
         }
-    });
+    }, inefficientCacheKeyForProperty());
 
     static final Function<Property, Method> ADD_MAP_TO_MAP = FunctionFactory.cache(property -> {
         TypeRef returnType = property.hasAttribute(GENERIC_TYPE_REF) ? property.getAttribute(GENERIC_TYPE_REF) : T_REF;
@@ -931,7 +935,7 @@ class ToMethod {
                 .addNewStringStatementStatement("if(map != null) { this." + property.getName() + ".putAll(map);} return (" + returnType + ")this;")
                 .endBlock()
                 .build();
-    });
+    }, cacheKeyForProperty());
 
     static final Function<Property, List<Method>> ADD_NEW_VALUE_TO_MAP = property -> {
         TypeRef returnType = property.hasAttribute(GENERIC_TYPE_REF) ? property.getAttribute(GENERIC_TYPE_REF) : T_REF;

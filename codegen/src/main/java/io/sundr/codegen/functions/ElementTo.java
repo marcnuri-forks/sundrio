@@ -120,11 +120,15 @@ public class ElementTo {
         }
     };
 
-    public static final Function<TypeMirror, TypeRef> MIRROR_TO_TYPEREF = FunctionFactory.cache(DEEP_MIRROR_TO_TYPEREF)
-            .withFallback(SHALLOW_MIRROR_TO_TYPEREF)
-            .withFallbackPredicate(IS_JAVA_TYPE_MIRROR)
-            .withMaximumRecursionLevel(10)
-            .withMaximumNestingDepth(10);
+    public static final Function<TypeMirror, TypeRef> MIRROR_TO_TYPEREF = FunctionFactory
+        .cache(
+            DEEP_MIRROR_TO_TYPEREF,
+            (typeMirror, typeRef) -> Optional.ofNullable(typeMirror).map(TypeMirror::toString).orElse(null)
+        )
+        .withFallback(SHALLOW_MIRROR_TO_TYPEREF)
+        .withFallbackPredicate(IS_JAVA_TYPE_MIRROR)
+        .withMaximumRecursionLevel(10)
+        .withMaximumNestingDepth(10);
 
     public static final  Function<TypeParameterElement, TypeParamDef> TYPEPARAMDEF = new  Function<TypeParameterElement, TypeParamDef> () {
 
