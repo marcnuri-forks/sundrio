@@ -14,7 +14,7 @@
  *      limitations under the License.
  */
 
-package io.sundr.codegen.annotations;
+package io.sundr.transform.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,4 +30,8 @@ public @interface ResourceSelector {
      * @return
      */
     String value();
+
+    String location() default "CLASS_PATH";
+
+    String moduleAndPkg() default "";
 }

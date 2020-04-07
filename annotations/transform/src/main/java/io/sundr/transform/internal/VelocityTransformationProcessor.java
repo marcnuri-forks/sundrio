@@ -17,9 +17,9 @@
 package io.sundr.transform.internal;
 
 import io.sundr.codegen.CodegenContext;
-import io.sundr.codegen.annotations.AnnotationSelector;
-import io.sundr.codegen.annotations.PackageSelector;
-import io.sundr.codegen.annotations.ResourceSelector;
+import io.sundr.transform.annotations.AnnotationSelector;
+import io.sundr.transform.annotations.PackageSelector;
+import io.sundr.transform.annotations.ResourceSelector;
 import io.sundr.codegen.functions.ElementTo;
 import io.sundr.codegen.model.TypeDef;
 import io.sundr.codegen.model.TypeDefBuilder;
@@ -41,11 +41,9 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -134,7 +132,7 @@ public class VelocityTransformationProcessor extends JavaGeneratingProcessor {
 
     public void selectFromResource(Elements elements, Filer filer, ResourceSelector selector, Map<String, TypeDef> definitions) {
         try {
-            FileObject fileObject = filer.getResource(StandardLocation.CLASS_PATH, "", selector.value());
+            FileObject fileObject = filer.getResource(StandardLocation.locationFor(selector.location()), selector.moduleAndPkg(), selector.value());
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileObject.openInputStream())))  {
                 System.out.println("Reading transformation resources from:" + selector.value() + ".");
                 List<String> lines = reader.lines().map(String::trim).filter(l->!StringUtils.isNullOrEmpty(l)).collect(Collectors.toList());

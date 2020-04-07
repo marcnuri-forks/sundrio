@@ -14,7 +14,7 @@
  *      limitations under the License.
  */
 
-package io.sundr.codegen.annotations;
+package io.sundr.transform.annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;

@@ -16,10 +16,6 @@
 
 package io.sundr.transform.annotations;
 
-import io.sundr.codegen.annotations.AnnotationSelector;
-import io.sundr.codegen.annotations.PackageSelector;
-import io.sundr.codegen.annotations.ResourceSelector;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
